@@ -1,72 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css'
 
-function Stopwatch() {
+const Stopwatch = () => {
     const [time, setTime] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
-    const [intervalId, setIntervalId] = useState(null);
+    const [running, setRunning] = useState(false);
+    const intervalRef = useRef(null);
 
     useEffect(() => {
-        return () => {
-            if (intervalId) {
-                clearInterval(intervalId);
-            }
-        };
-    }, [intervalId]);
-
-    const startStopwatch = () => {
-        if (!isRunning) {
-            const id = setInterval(() => {
+        if (running) {
+            intervalRef.current = setInterval(() => {
                 setTime(prevTime => prevTime + 1);
             }, 1000);
-            setIntervalId(id);
-            setIsRunning(true);
+        } else {
+            clearInterval(intervalRef.current);
         }
-    };
 
-    const stopStopwatch = () => {
-        if (isRunning) {
-            clearInterval(intervalId);
-            setIsRunning(false);
-        }
-    };
-
-    const resetStopwatch = () => {
-        clearInterval(intervalId);
-        setTime(0);
-        setIsRunning(false);
-    };
+        return () => clearInterval(intervalRef.current);
+    }, [running]);
 
     const formatTime = (time) => {
-        const getSeconds = `0${time % 60}`.slice(-2);
-        const minutes = `${Math.floor(time / 60)}`;
-        const getMinutes = `0${minutes % 60}`.slice(-2);
-        const getHours = `0${Math.floor(time / 3600)}`.slice(-2);
-        return `${getHours} : ${getMinutes} : ${getSeconds}`;
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    };
+
+    const handleStartStop = () => {
+        setRunning(!running);
+    };
+
+    const handleReset = () => {
+        setRunning(false);
+        setTime(0);
     };
 
     return (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+        <div className="stopwatch">
             <h1>Stopwatch</h1>
-            <div style={{ fontSize: '48px', margin: '20px 0' }}>
-                {formatTime(time)}
-            </div>
-            <div>
-                {!isRunning ? (
-                    <button onClick={startStopwatch} style={buttonStyle}>Start</button>
-                ) : (
-                    <button onClick={stopStopwatch} style={buttonStyle}>Stop</button>
-                )}
-                <button onClick={resetStopwatch} style={buttonStyle}>Reset</button>
-            </div>
+            <div className="time-display">Time: {formatTime(time)}</div>
+            <button onClick={handleStartStop}>
+                {running ? 'Stop' : 'Start'}
+            </button>
+            <button onClick={handleReset}>Reset</button>
         </div>
     );
-}
-
-const buttonStyle = {
-    fontSize: '20px',
-    margin: '0 10px',
-    padding: '10px 20px',
-    cursor: 'pointer'
 };
 
 export default Stopwatch;
